@@ -1,0 +1,17 @@
+Static {
+    content-align: center middle;
+    border: solid skyblue;
+    height: 1fr;
+}
+.box {
+    height: 1fr;
+    border: solid green;
+    overflow-y: auto;
+}
+.column {
+    height: 100%;
+    overflow-y: auto;
+}
+.row {
+    height: 10%;
+}
