@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Node Connection Portal</title>
+    <style>
+        body { font-family: Arial, sans-serif; background-color: #f0f0f0; margin: 0; padding: 20px; }
+        .container { max-width: 600px; margin: 0 auto; padding: 20px; background: white; border-radius: 10px; box-shadow: 0 0 10px rgba(0, 0, 0, 0.1); }
+        h2 { text-align: center; }
+        input, button { width: 100%; padding: 10px; margin: 10px 0; }
+        #messages { height: 300px; overflow-y: scroll; background: #eaeaea; padding: 10px; border-radius: 5px; margin-top: 20px; }
+        .message { margin: 5px 0; padding: 10px; background: #ddd; border-radius: 5px; }
+        .message .node { font-weight: bold; color: #333; }
+        #sendMessage { display: none; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2>Connect to Messaging Server</h2>
+        <input type="text" id="serverAddress" placeholder="Server Address (e.g., 127.0.0.1)">
+        <input type="number" id="serverPort" placeholder="Server Port (e.g., 12345)">
+        <button id="connectButton">Connect to Server</button>
+        
+        <div id="sendMessage">
+            <h3>Connected to Server</h3>
+            <input type="text" id="messageInput" placeholder="Type your message here...">
+            <button id="sendButton">Send Message</button>
+        </div>
+
+        <div id="messages">
+            <!-- Messages will appear here -->
+        </div>
+    </div>
+
+    <script>
+        let socket;
+        document.getElementById('connectButton').addEventListener('click', function () {
+            const serverAddress = document.getElementById('serverAddress').value;
+            const serverPort = document.getElementById('serverPort').value;
+            
+            if (!serverAddress || !serverPort) {
+                alert('Please enter the server address and port.');
+                return;
+            }
+
+            // Open a WebSocket connection
+            socket = new WebSocket(`ws://${serverAddress}:${serverPort}`);
+
+            // Handle connection events
+            socket.onopen = function () {
+                document.getElementById('sendMessage').style.display = 'block';
+                document.getElementById('connectButton').style.display = 'none';
+                console.log('Connected to the server');
+                addMessage("System", `Connected to ${serverAddress}:${serverPort}`);
+            };
+
+            socket.onmessage = function (event) {
+                const { node, message } = JSON.parse(event.data);
+                addMessage(node, message);
+            };
+
+            socket.onclose = function () {
+                document.getElementById('sendMessage').style.display = 'none';
+                document.getElementById('connectButton').style.display = 'block';
+                console.log('Disconnected from the server');
+                addMessage("System", `Disconnected from ${serverAddress}:${serverPort}`);
+            };
+
+            socket.onerror = function (error) {
+                alert(`Connection error: ${error.message}`);
+            };
+        });
+
+        document.getElementById('sendButton').addEventListener('click', function () {
+            const message = document.getElementById('messageInput').value;
+            if (message && socket) {
+                socket.send(JSON.stringify({ node: "WebClient", message: message }));
+                addMessage("You", message);
+                document.getElementById('messageInput').value = '';
+            }
+        });
+
+        function addMessage(node, message) {
+            const messageElement = document.createElement('div');
+            messageElement.classList.add('message');
+            messageElement.innerHTML = `<span class="node">${node}:</span> ${message}`;
+            document.getElementById('messages').appendChild(messageElement);
+        }
+    </script>
+</body>
+</html>

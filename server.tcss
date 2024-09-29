@@ -1,0 +1,21 @@
+Static {
+    content-align: center middle;
+    border: solid skyblue;
+    height: 1fr;
+}
+Label {
+    color: white;
+}
+.box {
+    height: 1fr;
+    border: solid green;
+    overflow-y: auto;
+}
+.column {
+    height: 100%;
+    overflow-x: auto;
+    overflow-y: auto;
+}
+.row {
+    height: 10%;
+}
