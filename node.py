@@ -3,7 +3,7 @@ import threading
 import sys
 from textual.app import App, ComposeResult
 from textual.containers import Vertical, Horizontal
-from textual.widgets import Button, Footer, Header, Input, Static, RichLog
+from textual.widgets import Button, Footer, Header, Input, RichLog
 
 
 class ChatClient(App):
@@ -11,31 +11,33 @@ class ChatClient(App):
 
     CSS_PATH = "node.tcss"  # Add styles here
 
-    def __init__(self, node_name, host='127.0.0.1', port=12345):
+    def __init__(self, node_name, host="127.0.0.1", port=8000):
         super().__init__()
         self.node_name = node_name
         self.host = host
         self.port = port
         self.client_socket = None
-        self.running = True  # To keep track of whether the client is running or disconnected
+        self.running = True
         self.messages = []
 
     def compose(self) -> ComposeResult:
         """Create the UI layout using a grid."""
-        yield Header(node_name)  # Add header
-        yield Footer()  # Add footer
+        yield Header(node_name)
+        yield Footer()
 
         self.chat_display = RichLog(classes="box")  # Area for incoming messages
         self.input_box = Input(placeholder="Type your message here...")  # Input box
         self.send_button = Button(label="Send", id="send_button")  # Send button
-        self.disconnect_button = Button(label="Disconnect", id="disconnect_button")  # Disconnect button
+        self.disconnect_button = Button(
+            label="Disconnect", id="disconnect_button"
+        )  # Disconnect button
 
         with Vertical(classes="column"):
             yield self.chat_display
             with Horizontal(classes="row"):
-                yield self.send_button  # Include the send button
-                yield self.disconnect_button  # Include the disconnect button
-                yield self.input_box  # Place the input box after the buttons
+                yield self.send_button
+                yield self.disconnect_button
+                yield self.input_box
 
     async def on_mount(self):
         self.title = self.node_name
@@ -44,12 +46,16 @@ class ChatClient(App):
         try:
             self.client_socket.connect((self.host, self.port))
         except ConnectionError:
-            self.add_message_to_display(f"Unable to connect to the server at {self.host}:{self.port}")
+            self.add_message_to_display(
+                f"Unable to connect to the server at {self.host}:{self.port}"
+            )
             return
 
         # Send node name to the server
         self.client_socket.send(self.node_name.encode())
-        self.add_message_to_display(f"{self.node_name} connected to server at {self.host}:{self.port}")
+        self.add_message_to_display(
+            f"{self.node_name} connected to server at {self.host}:{self.port}"
+        )
 
         # Start a separate thread to listen for incoming messages
         threading.Thread(target=self.listen_for_messages, daemon=True).start()
@@ -71,7 +77,6 @@ class ChatClient(App):
                 self.add_message_to_display("System: Connection lost.")
                 break
 
-
     def add_message_to_display(self, message):
         """Update the message display area with new messages."""
         self.chat_display.write(message)
@@ -82,7 +87,7 @@ class ChatClient(App):
             message = self.input_box.value
             if message.strip():
                 self.send_message(message)
-                self.input_box.value = ""  # Clear the input box after sending
+                self.input_box.value = ""
 
         elif event.button.id == "disconnect_button":
             self.disconnect_node()
@@ -93,8 +98,12 @@ class ChatClient(App):
             if self.client_socket is not None:
                 self.client_socket.send(message.encode())
             else:
-                self.add_message_to_display("Socket is closed or invalid. Cannot send message.")
-                self.add_message_to_display("System: Connection is closed. Cannot send message.")
+                self.add_message_to_display(
+                    "Socket is closed or invalid. Cannot send message."
+                )
+                self.add_message_to_display(
+                    "System: Connection is closed. Cannot send message."
+                )
         except (ConnectionResetError, BrokenPipeError, OSError) as e:
             self.add_message_to_display(f"Error sending message: {e}")
             self.add_message_to_display("System: Server is not available.")
@@ -111,12 +120,12 @@ class ChatClient(App):
             finally:
                 self.client_socket = None
                 self.add_message_to_display("System: Connection closed by the server.")
+
     def shutdown_client(self):
         """Handle client shutdown."""
         self.close_connection()  # Close the socket first
         self.running = False
         self.add_message_to_display("Client shutdown completed.")
-
 
     def disconnect_node(self):
         """Gracefully disconnect from the server."""
@@ -126,7 +135,9 @@ class ChatClient(App):
                 self.client_socket.shutdown(socket.SHUT_RDWR)
                 self.client_socket.close()
                 self.chat_display.write("[Disconnected from server]")
-                self.add_message_to_display(f"{self.node_name} has disconnected from the server.")
+                self.add_message_to_display(
+                    f"{self.node_name} has disconnected from the server."
+                )
             except Exception as e:
                 self.add_message_to_display(f"Error disconnecting: {e}")
 

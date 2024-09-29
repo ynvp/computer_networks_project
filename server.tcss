@@ -1,6 +1,6 @@
 Static {
     content-align: center middle;
-    border: solid skyblue;
+    border: solid deepskyblue;
     height: 1fr;
 }
 Label {
@@ -8,7 +8,7 @@ Label {
 }
 .box {
     height: 1fr;
-    border: solid green;
+    border: solid deepskyblue;
     overflow-y: auto;
 }
 .column {
