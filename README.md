@@ -20,8 +20,8 @@
 4. When server shutdown button is clicked, it triggers all nodes to gracefully disconnect themselves from the socket and close the connections.
 5. Connecting a node manually to server ``` python node.py <node_name> ``` example: ```python node.py "Node 4"```
 6. Any connection to the server is updated in server UI.
-![server screenshot with 2 nodes connected](image.png)
-![alt text](image-1.png)
+![server screenshot with 2 nodes connected](image/README/image.png)
+![alt text](image/README/image-1.png)
 
 ![1727581228062](image/README/1727581228062.png)
 ![1727581275789](image/README/1727581275789.png)

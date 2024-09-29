@@ -8,12 +8,13 @@ from textual.app import App, ComposeResult
 from textual.containers import Vertical, Horizontal
 from textual.widgets import Static, Header, Footer, Button
 from textual.widgets import RichLog
+from datetime import datetime
 
 
 class ServerApp(App):
     """Textual UI for messaging server."""
 
-    CSS_PATH = "server.tcss"
+    CSS_PATH = "server.tcss"  # Add styles here
 
     def __init__(self, server, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -90,7 +91,8 @@ class Server(threading.Thread):
                     break
                 self.messages.put((node_name, message))
                 self.forward_messages()
-                self.app.update_messages(f"{node_name}: {message}")
+                current_time = datetime.now().strftime('%H:%M:%S')
+                self.app.update_messages(f"{current_time} - {node_name}: {message}")
             except Exception as e:
                 break
 
@@ -100,7 +102,7 @@ class Server(threading.Thread):
     def on_client_disconnect(self, addr, node_name):
         """Handle client disconnection."""
         del self.clients[addr]  # Remove client from the list
-        # Clear the display before displaying all connected nodes
+          # Clear the display before displaying all connected nodes
         self.app.connected_nodes_display.clear()
         self.app.connected_nodes_display.write("Connected Nodes: \n")
         for (_, name) in self.clients.values():
@@ -114,9 +116,10 @@ class Server(threading.Thread):
     def forward_messages(self):
         while not self.messages.empty():
             node_name, message = self.messages.get()
+            current_time = datetime.now().strftime('%H:%M:%S')
             for client_addr, (client_socket, _) in self.clients.items():
                 try:
-                    client_socket.send(f"{node_name}: {message}".encode())
+                    client_socket.send(f"{current_time} - {node_name}: {message}".encode())
                 except Exception as e:
                     pass
 
@@ -135,7 +138,9 @@ class Server(threading.Thread):
 
         for addr, (client_socket, _) in list(self.clients.items()):
             try:
-                client_socket.shutdown(socket.SHUT_RDWR)
+                client_socket.shutdown(
+                    socket.SHUT_RDWR
+                )
                 client_socket.close()  # Close each client socket
             except Exception as e:
                 self.add_message_to_display(f"Error closing connection for {addr}: {e}")

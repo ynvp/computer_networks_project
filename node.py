@@ -4,6 +4,7 @@ import sys
 from textual.app import App, ComposeResult
 from textual.containers import Vertical, Horizontal
 from textual.widgets import Button, Footer, Header, Input, RichLog
+from datetime import datetime
 
 
 class ChatClient(App):
