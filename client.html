@@ -18,8 +18,8 @@
 <body>
     <div class="container">
         <h2>Connect to Messaging Server</h2>
-        <input type="text" id="serverAddress" placeholder="Server Address (e.g., 127.0.0.1)">
-        <input type="number" id="serverPort" placeholder="Server Port (e.g., 12345)">
+        <input type="text" id="serverAddress" value="127.0.0.1">
+        <input type="number" id="serverPort" value="12345">
         <button id="connectButton">Connect to Server</button>
         
         <div id="sendMessage">
@@ -35,6 +35,7 @@
 
     <script>
         let socket;
+
         document.getElementById('connectButton').addEventListener('click', function () {
             const serverAddress = document.getElementById('serverAddress').value;
             const serverPort = document.getElementById('serverPort').value;
@@ -45,7 +46,7 @@
             }
 
             // Open a WebSocket connection
-            socket = new WebSocket(`ws://${serverAddress}:${serverPort}`);
+            socket = new WebSocket('ws://127.0.0.1:12345');
 
             // Handle connection events
             socket.onopen = function () {
@@ -86,6 +87,9 @@
             messageElement.classList.add('message');
             messageElement.innerHTML = `<span class="node">${node}:</span> ${message}`;
             document.getElementById('messages').appendChild(messageElement);
+            // Scroll to the bottom of the messages container
+            const messagesContainer = document.getElementById('messages');
+            messagesContainer.scrollTop = messagesContainer.scrollHeight;
         }
     </script>
 </body>

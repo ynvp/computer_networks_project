@@ -9,8 +9,10 @@ from textual.containers import Vertical, Horizontal
 from textual.widgets import Static, Header, Footer, Button
 from textual.widgets import RichLog
 
+
 class ServerApp(App):
     """Textual UI for messaging server."""
+
     CSS_PATH = "server.tcss"  # Add styles here
 
     def __init__(self, server, *args, **kwargs):
@@ -21,23 +23,23 @@ class ServerApp(App):
         yield Header()
         yield Footer()
 
-        self.status_display = Static("Server Status: Running", classes="box")
-        self.connected_nodes_display = RichLog(highlight=True, markup=True, classes="box")
+        self.connected_nodes_display = RichLog(
+            highlight=True, markup=True, classes="box"
+        )
         self.connected_nodes_display.write("Connected Nodes: \n")
         self.messages_display = RichLog(markup=True, classes="box")
 
         self.shutdown_button = Button(label="Shut Down Server", id="shutdown_button")
 
         with Vertical(classes="column"):
-            yield self.status_display
             yield self.connected_nodes_display
             yield self.messages_display
             yield self.shutdown_button
-
+    async def on_mount(self):
+        self.title = "Server running @ 127.0.0.1:12345"
     async def on_button_pressed(self, event: Button.Pressed):
         """Handle shutdown button press."""
         if event.button.id == "shutdown_button":
-            self.status_display.update("Server Status: Shutting Down...")
             self.server.shutdown()
             self.exit()
 
@@ -49,8 +51,9 @@ class ServerApp(App):
         """Start the server in a background thread."""
         threading.Thread(target=self.server.run, daemon=True).start()
 
+
 class Server(threading.Thread):
-    def __init__(self, app, host='127.0.0.1', port=12345):
+    def __init__(self, app, host="127.0.0.1", port=12345):
         super().__init__()
         self.host = host
         self.port = port
@@ -70,7 +73,9 @@ class Server(threading.Thread):
                     node_name = client_socket.recv(1024).decode()
                     self.clients[addr] = (client_socket, node_name)
                     self.app.connected_nodes_display.write(node_name)
-                    threading.Thread(target=self.handle_client, args=(client_socket, addr)).start()
+                    threading.Thread(
+                        target=self.handle_client, args=(client_socket, addr)
+                    ).start()
                 except Exception as e:
                     print(f"Server error: {e}")
 
@@ -89,14 +94,22 @@ class Server(threading.Thread):
                 print(f"Error: {e}")
                 break
 
-        del self.clients[addr]
-        client_socket.close()
-        self.app.connected_nodes_display.clear()
-        self.connected_nodes_display.write("Connected Nodes: \n")
-        for (client_socket, node_name) in self.clients.items():
-            self.app.connected_nodes_display.write(node_name)
+        # Handle client disconnection
+        self.on_client_disconnect(addr, node_name)
 
+    def on_client_disconnect(self, addr, node_name):
+        """Handle client disconnection."""
+        del self.clients[addr]  # Remove client from the list
         print(f"Disconnected {node_name} ({addr})")
+        self.app.connected_nodes_display.clear()  # Clear the display
+        self.app.connected_nodes_display.write("Connected Nodes: \n")
+        for (client_socket, name) in self.clients.values():
+            self.app.connected_nodes_display.write(
+                name
+            )  # Update display with current clients
+
+        # Inform remaining clients about the disconnection
+        self.broadcast_message(f"{node_name} has disconnected.")
 
     def forward_messages(self):
         while not self.messages.empty():
@@ -107,20 +120,32 @@ class Server(threading.Thread):
                 except Exception as e:
                     print(f"Error forwarding message to {client_addr}: {e}")
 
+    def broadcast_message(self, message):
+        """Send a message to all connected clients."""
+        for client_addr, (client_socket, _) in self.clients.items():
+            try:
+                client_socket.send(message.encode())
+            except Exception as e:
+                print(f"Error forwarding message to {client_addr}: {e}")
+
     def shutdown(self):
         self.running = False
+        self.broadcast_message("Shutting down server...")
         for addr, (client_socket, _) in self.clients.items():
             client_socket.close()  # Close each client socket
 
-
         print("All connections closed.")
 
-def spawn_node(node_name, host='127.0.0.1', port=12345):
+
+def spawn_node(node_name, host="127.0.0.1", port=12345):
     """Function to spawn a node in a new terminal window."""
-    if os.name == 'nt':  # Windows
-        subprocess.Popen(['start', 'cmd', '/K', 'python', 'node.py', node_name], shell=True)
+    if os.name == "nt":  # Windows
+        subprocess.Popen(
+            ["start", '/max', "cmd", "/K", "python", "node.py", node_name], shell=True
+        )
     else:  # macOS/Linux
-        subprocess.Popen(['gnome-terminal', '--', 'python', 'node.py', node_name])
+        subprocess.Popen(["gnome-terminal", "--", "python", "node.py", node_name])
+
 
 def main():
     if len(sys.argv) < 2:
@@ -146,10 +171,11 @@ def main():
 
     # Spawn nodes with names like Node 1, Node 2, etc.
     for i in range(1, number_of_nodes + 1):
-        spawn_node(f'Node {i}', host='127.0.0.1', port=12345)
+        spawn_node(f"Node {i}", host="127.0.0.1", port=12345)
 
     # Run the Textual UI
     server_app.run()
+
 
 if __name__ == "__main__":
     main()

@@ -22,7 +22,7 @@ class ChatClient(App):
 
     def compose(self) -> ComposeResult:
         """Create the UI layout using a grid."""
-        yield Header()  # Add header
+        yield Header(node_name)  # Add header
         yield Footer()  # Add footer
 
         self.chat_display = RichLog(classes="box")  # Area for incoming messages
@@ -31,7 +31,6 @@ class ChatClient(App):
         self.disconnect_button = Button(label="Disconnect", id="disconnect_button")  # Disconnect button
 
         with Vertical(classes="column"):
-            yield Static(self.node_name)  # Display the node name at the top
             yield self.chat_display
             with Horizontal(classes="row"):
                 yield self.send_button  # Include the send button
@@ -39,6 +38,7 @@ class ChatClient(App):
                 yield self.input_box  # Place the input box after the buttons
 
     async def on_mount(self):
+        self.title = self.node_name
         """Connect to the server when the app mounts."""
         self.client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         try:
