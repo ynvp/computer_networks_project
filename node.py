@@ -55,7 +55,10 @@ class ChatClient(App):
         # Send node name to the server
         self.client_socket.send(self.node_name.encode())
         self.add_message_to_display(
-            f"{self.node_name} connected to server at {self.host}:{self.port}"
+            "laddr = Local Address, raddr = Remote Address\n"
+        )
+        self.add_message_to_display(
+            f"{self.node_name} connected to server at {self.host}:{self.port}" + "\n" + str(self.client_socket)
         )
 
         # Start a separate thread to listen for incoming messages
@@ -74,7 +77,6 @@ class ChatClient(App):
                     break
                 self.add_message_to_display(message)
             except (ConnectionResetError, OSError) as e:
-                self.add_message_to_display(f"Connection error: {e}")
                 self.add_message_to_display("System: Connection lost.")
                 break
 

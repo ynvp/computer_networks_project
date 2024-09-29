@@ -12,16 +12,36 @@
 3. On windows create virtual environment using ``` virtualenv venv ```
 4. Activate venv using ``` venv\Scripts\activate ```
 5. Install dependencies using ``` pip install -r requirements.txt ```
+6. Whenever opening a new terminal activate environment first before starting server.
 
 ## Starting server and spawning nodes
 1. ``` python messaging_server.py <no_of_nodes> ``` example: ``` python messaging_server.py 2 ``` starts server and spawns 2 nodes.
 2. All connected nodes are shown in server UI.
 3. When a node is disconnected, server gracefully disconnects from node and closes socket associated with it.
 4. When server shutdown button is clicked, it triggers all nodes to gracefully disconnect themselves from the socket and close the connections.
-5. Connecting a node manually to server ``` python node.py <node_name> ``` example: ```python node.py "Node 4"```
+5. Connecting a node manually to server ``` python node.py <node_name> ``` example: ```python node.py Node4```.
 6. Any connection to the server is updated in server UI.
-![server screenshot with 2 nodes connected](image/README/image.png)
-![alt text](image/README/image-1.png)
 
-![1727581228062](image/README/1727581228062.png)
-![1727581275789](image/README/1727581275789.png)
+Sever window
+![alt text](image-1.png)
+Node window
+![alt text](image.png)
+Message
+server:
+![alt text](image-2.png)
+node4:
+![alt text](image-3.png)
+node:
+![alt text](image-4.png)
+Client disconnect:
+![alt text](image-5.png)
+Server view:
+![alt text](image-6.png)
+server updates current active connections in Address table window.
+Other clients view:
+![alt text](image-7.png)
+
+Server shutdown:
+![alt text](image-8.png)
+clients view:
+![alt text](image-9.png)

@@ -27,8 +27,10 @@ class ServerApp(App):
         self.connected_nodes_display = RichLog(
             highlight=True, markup=True, classes="box"
         )
-        self.connected_nodes_display.write("Connected Nodes: \n")
+        self.app.connected_nodes_display.write("Address Table  - Connected Nodes: \n")
+        self.app.connected_nodes_display.write("laddr = Local Address, raddr = Remote Address\n")
         self.messages_display = RichLog(markup=True, classes="box")
+        self.messages_display.write("-------MESSAGES-------")
 
         self.shutdown_button = Button(label="Shut Down Server", id="shutdown_button")
 
@@ -75,7 +77,8 @@ class Server(threading.Thread):
                     client_socket, addr = server_socket.accept()
                     node_name = client_socket.recv(1024).decode()
                     self.clients[addr] = (client_socket, node_name)
-                    self.app.connected_nodes_display.write(node_name)
+                    self.app.connected_nodes_display.write(str(client_socket) + " " + node_name)
+                    self.broadcast_message(f"Server message: {node_name} connected to server.")
                     threading.Thread(
                         target=self.handle_client, args=(client_socket, addr)
                     ).start()
@@ -104,10 +107,11 @@ class Server(threading.Thread):
         del self.clients[addr]  # Remove client from the list
           # Clear the display before displaying all connected nodes
         self.app.connected_nodes_display.clear()
-        self.app.connected_nodes_display.write("Connected Nodes: \n")
-        for (_, name) in self.clients.values():
+        self.app.connected_nodes_display.write("Address Table  - Connected Nodes: \n")
+        self.app.connected_nodes_display.write("laddr = Local Address, raddr = Remote Address\n")
+        for (client_socket, name) in self.clients.values():
             self.app.connected_nodes_display.write(
-                name
+                str(client_socket) + " " + name
             )  # Update display with current clients
 
         # Inform remaining clients about the disconnection
@@ -148,10 +152,15 @@ class Server(threading.Thread):
 
 def spawn_node(node_name, host="127.0.0.1", port=8000):
     """Function to spawn a node in a new terminal window."""
+    script_path = "Desktop/Assignment1/node.py"  # Path for Mac OS
     if os.name == "nt":  # Windows
         subprocess.Popen(
             ["start", "/max", "cmd", "/K", "python", "node.py", node_name], shell=True
         )
+    elif os.uname().sysname == 'Darwin':  # For macOS
+        # Open a new Terminal window and run the command with absolute path
+        subprocess.Popen(['osascript', '-e',
+                          f'tell app "Terminal" to do script "{command}"'])
     else:  # macOS/Linux
         subprocess.Popen(["gnome-terminal", "--", "python", "node.py", node_name])
 
@@ -180,7 +189,7 @@ def main():
 
     # Spawn nodes with names like Node 1, Node 2, etc.
     for i in range(1, number_of_nodes + 1):
-        spawn_node(f"Node {i}", host="127.0.0.1", port=8000)
+        spawn_node(f"Node{i}", host="127.0.0.1", port=8000)
 
     # Run the Textual UI
     server_app.run()
