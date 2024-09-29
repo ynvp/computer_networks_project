@@ -66,7 +66,7 @@ class Server(threading.Thread):
         with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as server_socket:
             server_socket.bind((self.host, self.port))
             server_socket.listen()
-            print(f"Server listening on {self.host}:{self.port}")
+            # print(f"Server listening on {self.host}:{self.port}")
             while self.running:
                 try:
                     client_socket, addr = server_socket.accept()
@@ -77,7 +77,8 @@ class Server(threading.Thread):
                         target=self.handle_client, args=(client_socket, addr)
                     ).start()
                 except Exception as e:
-                    print(f"Server error: {e}")
+                    # print(f"Server error: {e}")
+                    pass
 
     def handle_client(self, client_socket, addr):
         node_name = self.clients[addr][1]
@@ -86,12 +87,12 @@ class Server(threading.Thread):
                 message = client_socket.recv(1024).decode()
                 if not message:
                     break
-                print(f"Received message from {node_name}: {message}")
+                # print(f"Received message from {node_name}: {message}")
                 self.messages.put((node_name, message))
                 self.forward_messages()
                 self.app.update_messages(f"{node_name}: {message}")
             except Exception as e:
-                print(f"Error: {e}")
+                # print(f"Error: {e}")
                 break
 
         # Handle client disconnection
@@ -100,7 +101,7 @@ class Server(threading.Thread):
     def on_client_disconnect(self, addr, node_name):
         """Handle client disconnection."""
         del self.clients[addr]  # Remove client from the list
-        print(f"Disconnected {node_name} ({addr})")
+        # print(f"Disconnected {node_name} ({addr})")
         self.app.connected_nodes_display.clear()  # Clear the display
         self.app.connected_nodes_display.write("Connected Nodes: \n")
         for (client_socket, name) in self.clients.values():
@@ -118,7 +119,8 @@ class Server(threading.Thread):
                 try:
                     client_socket.send(f"{node_name}: {message}".encode())
                 except Exception as e:
-                    print(f"Error forwarding message to {client_addr}: {e}")
+                    # print(f"Error forwarding message to {client_addr}: {e}")
+                    pass
 
     def broadcast_message(self, message):
         """Send a message to all connected clients."""
@@ -126,15 +128,22 @@ class Server(threading.Thread):
             try:
                 client_socket.send(message.encode())
             except Exception as e:
-                print(f"Error forwarding message to {client_addr}: {e}")
+                # print(f"Error forwarding message to {client_addr}: {e}")
+                pass
 
     def shutdown(self):
         self.running = False
-        self.broadcast_message("Shutting down server...")
-        for addr, (client_socket, _) in self.clients.items():
-            client_socket.close()  # Close each client socket
+        # Inform all clients that the server is shutting down
+        self.broadcast_message("SERVER_SHUTDOWN")
 
-        print("All connections closed.")
+        # Create a copy of the items to iterate safely
+        for addr, (client_socket, _) in list(self.clients.items()):
+            try:
+                client_socket.shutdown(socket.SHUT_RDWR)  # Properly shutdown before closing
+                client_socket.close()  # Close each client socket
+            except Exception as e:
+                self.add_message_to_display(f"Error closing connection for {addr}: {e}")
+
 
 
 def spawn_node(node_name, host="127.0.0.1", port=12345):

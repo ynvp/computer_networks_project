@@ -44,31 +44,33 @@ class ChatClient(App):
         try:
             self.client_socket.connect((self.host, self.port))
         except ConnectionError:
-            print(f"Unable to connect to the server at {self.host}:{self.port}")
+            self.add_message_to_display(f"Unable to connect to the server at {self.host}:{self.port}")
             return
 
         # Send node name to the server
         self.client_socket.send(self.node_name.encode())
-        print(f"{self.node_name} connected to server at {self.host}:{self.port}")
+        self.add_message_to_display(f"{self.node_name} connected to server at {self.host}:{self.port}")
 
         # Start a separate thread to listen for incoming messages
         threading.Thread(target=self.listen_for_messages, daemon=True).start()
 
     def listen_for_messages(self):
         """Listen for incoming messages from the server."""
-        while self.running:
+        while True:
             try:
                 message = self.client_socket.recv(1024).decode()
-                if message:
-                    self.add_message_to_display(message)
-                else:
+                if not message:  # Empty message indicates a closed connection
                     break
-            except Exception as e:
-                print(f"Error: {e}")
+                if message == "SERVER_SHUTDOWN":
+                    self.add_message_to_display("Server: Server is shutting down.")
+                    self.close_connection()
+                    break
+                self.add_message_to_display(message)
+            except (ConnectionResetError, OSError) as e:
+                self.add_message_to_display(f"Connection error: {e}")
+                self.add_message_to_display("System: Connection lost.")
                 break
 
-        self.running = False
-        self.client_socket.close()
 
     def add_message_to_display(self, message):
         """Update the message display area with new messages."""
@@ -88,20 +90,45 @@ class ChatClient(App):
     def send_message(self, message):
         """Send a message to the server."""
         try:
-            self.client_socket.send(message.encode())
-        except Exception as e:
-            print(f"Error sending message: {e}")
+            if self.client_socket is not None:
+                self.client_socket.send(message.encode())
+            else:
+                self.add_message_to_display("Socket is closed or invalid. Cannot send message.")
+                self.add_message_to_display("System: Connection is closed. Cannot send message.")
+        except (ConnectionResetError, BrokenPipeError, OSError) as e:
+            self.add_message_to_display(f"Error sending message: {e}")
+            self.add_message_to_display("System: Server is not available.")
+
+    def close_connection(self):
+        """Close the client connection gracefully."""
+        if self.client_socket:
+            try:
+                self.client_socket.shutdown(socket.SHUT_RDWR)
+                self.client_socket.close()
+            except Exception as e:
+                self.add_message_to_display(f"Error while closing socket: {e}")
+                pass
+            finally:
+                self.client_socket = None
+                self.add_message_to_display("System: Connection closed by the server.")
+    def shutdown_client(self):
+        """Handle client shutdown."""
+        self.close_connection()  # Close the socket first
+        self.running = False
+        self.add_message_to_display("Client shutdown completed.")
+
 
     def disconnect_node(self):
         """Gracefully disconnect from the server."""
         if self.client_socket:
             try:
                 self.running = False
+                self.client_socket.shutdown(socket.SHUT_RDWR)
                 self.client_socket.close()
                 self.chat_display.write("[Disconnected from server]")
-                print(f"{self.node_name} has disconnected from the server.")
+                self.add_message_to_display(f"{self.node_name} has disconnected from the server.")
             except Exception as e:
-                print(f"Error disconnecting: {e}")
+                self.add_message_to_display(f"Error disconnecting: {e}")
 
 
 if __name__ == "__main__":
