@@ -1,5 +1,5 @@
 # CSCE 5580 Section 002 - Computer Networks (Fall 2024 1)
-
+##### GitHub Link: https://github.com/ynvp/computer_networks_project
 ## Group 8
 1. Naga Vara Pradeep Yendluri
 2. Venkata Varuna Sri Budidi
@@ -23,25 +23,25 @@
 6. Any connection to the server is updated in server UI.
 
 Sever window
-![alt text](image-1.png)
+![alt text](image/README/image-1.png)
 Node window
-![alt text](image.png)
+![alt text](image/README/image.png)
 Message
 server:
-![alt text](image-2.png)
+![alt text](image/README/image-2.png)
 node4:
-![alt text](image-3.png)
+![alt text](image/README/image-3.png)
 node:
-![alt text](image-4.png)
+![alt text](image/README/image-4.png)
 Client disconnect:
-![alt text](image-5.png)
+![alt text](image/README/image-5.png)
 Server view:
-![alt text](image-6.png)
+![alt text](image/README/image-6.png)
 server updates current active connections in Address table window.
 Other clients view:
-![alt text](image-7.png)
+![alt text](image/README/image-7.png)
 
 Server shutdown:
-![alt text](image-8.png)
-clients view:
-![alt text](image-9.png)
+![alt text](image/README/image-8.png)
+client view:
+![alt text](image/README/image-9.png)
